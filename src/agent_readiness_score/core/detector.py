@@ -43,7 +43,27 @@ SKIP_DIRS = {
     "node_modules", ".git", "__pycache__", ".venv", "venv", "env",
     "dist", "build", "target", ".next", ".nuxt", "coverage",
     ".pytest_cache", ".mypy_cache", ".ruff_cache", "vendor",
+    ".cargo", ".rustup", "Pods", ".gradle", ".idea", ".vscode",
 }
+
+
+def _is_excluded(path: Path) -> bool:
+    """Check if path is in an excluded directory."""
+    return any(excluded in path.parts for excluded in SKIP_DIRS)
+
+
+def _filtered_glob(path: Path, pattern: str, limit: int = 1) -> list[Path]:
+    """Glob with exclusion filtering for performance."""
+    results = []
+    try:
+        for match in path.glob(pattern):
+            if not _is_excluded(match):
+                results.append(match)
+                if len(results) >= limit:
+                    break
+    except (PermissionError, OSError):
+        pass
+    return results
 
 # Shared config files at root that benefit all packages
 SHARED_CONFIGS = [
@@ -160,11 +180,13 @@ def _create_package(
     # Check for tests
     has_tests = any((pkg_path / td).exists() for td in TEST_DIRS)
     if not has_tests:
-        # Check for test files
-        has_tests = bool(list(pkg_path.glob("**/test_*.py")) or
-                        list(pkg_path.glob("**/*.test.ts")) or
-                        list(pkg_path.glob("**/*.test.js")) or
-                        list(pkg_path.glob("**/*_test.go")))
+        # Check for test files (with exclusion filtering)
+        has_tests = bool(
+            _filtered_glob(pkg_path, "**/test_*.py") or
+            _filtered_glob(pkg_path, "**/*.test.ts") or
+            _filtered_glob(pkg_path, "**/*.test.js") or
+            _filtered_glob(pkg_path, "**/*_test.go")
+        )
 
     # Check for lockfile
     has_lockfile = any((pkg_path / lf).exists() for lf in LOCKFILES)
@@ -211,12 +233,9 @@ def _detect_languages_in_dir(path: Path) -> set[Language]:
 
     for lang, patterns in lang_indicators.items():
         for pattern in patterns:
-            try:
-                if list(path.glob(f"**/{pattern}"))[:1]:  # Just check if any exist
-                    langs.add(lang)
-                    break
-            except (PermissionError, OSError):
-                pass
+            if _filtered_glob(path, f"**/{pattern}", limit=1):
+                langs.add(lang)
+                break
 
     return langs
 
@@ -279,11 +298,8 @@ def _has_any_code(repo_path: Path) -> bool:
     """Check if directory has any recognizable code files."""
     code_patterns = ["*.py", "*.js", "*.ts", "*.go", "*.rs", "*.rb", "*.java", "*.swift", "*.cs"]
     for pattern in code_patterns:
-        try:
-            if list(repo_path.glob(f"**/{pattern}"))[:1]:
-                return True
-        except (PermissionError, OSError):
-            pass
+        if _filtered_glob(repo_path, f"**/{pattern}", limit=1):
+            return True
     return False
 
 

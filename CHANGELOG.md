@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2024-12-25
+
+### Fixed
+
+- **Performance**: Glob patterns now exclude `node_modules/`, `.git/`, `vendor/`, and other heavy directories
+- Fixes scanner hanging indefinitely on large monorepos with multiple `node_modules/` directories
+- Added `_is_excluded()` and `_filtered_glob()` helpers for consistent exclusion logic
+
 ## [0.2.0] - 2024-12-25
 
 ### Added

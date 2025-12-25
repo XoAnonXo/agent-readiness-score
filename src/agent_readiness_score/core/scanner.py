@@ -7,6 +7,14 @@ from typing import Protocol, runtime_checkable
 from agent_readiness_score.core.models import Category, CategoryScore, Finding, CATEGORY_WEIGHTS
 from agent_readiness_score.core.language import Language, LanguageStats
 
+# Directories to skip during scanning (performance optimization)
+EXCLUDED_DIRS = {
+    "node_modules", ".git", ".venv", "venv", "env", "__pycache__",
+    "dist", "build", "target", ".next", ".nuxt", "coverage",
+    ".pytest_cache", ".mypy_cache", ".ruff_cache", "vendor",
+    ".cargo", ".rustup", "Pods", ".gradle", ".idea", ".vscode",
+}
+
 
 @runtime_checkable
 class Scanner(Protocol):
@@ -128,31 +136,36 @@ class BaseScanner(ABC):
         """Find the first file matching any of the patterns.
 
         Searches root level first, then subdirectories for polyrepo/monorepo support.
+        Excludes node_modules, .git, and other heavy directories for performance.
         """
         # First pass: check root level and explicit patterns
         for pattern in patterns:
-            matches = list(repo_path.glob(pattern))
-            if matches:
-                try:
-                    return matches[0].relative_to(repo_path)
-                except ValueError:
-                    return matches[0]
+            for match in repo_path.glob(pattern):
+                if not self._is_excluded(match):
+                    try:
+                        return match.relative_to(repo_path)
+                    except ValueError:
+                        return match
 
         # Second pass: recursive search in subdirectories
         # Skip patterns that already have ** or are directories
         for pattern in patterns:
             if "**" in pattern or pattern.endswith("/"):
                 continue
-            # Try recursive pattern
+            # Try recursive pattern with exclusion filtering
             recursive_pattern = f"**/{pattern}"
-            matches = list(repo_path.glob(recursive_pattern))
-            if matches:
-                try:
-                    return matches[0].relative_to(repo_path)
-                except ValueError:
-                    return matches[0]
+            for match in repo_path.glob(recursive_pattern):
+                if not self._is_excluded(match):
+                    try:
+                        return match.relative_to(repo_path)
+                    except ValueError:
+                        return match
 
         return None
+
+    def _is_excluded(self, path: Path) -> bool:
+        """Check if path is in an excluded directory."""
+        return any(excluded in path.parts for excluded in EXCLUDED_DIRS)
 
 
 # Type alias for check tuples
