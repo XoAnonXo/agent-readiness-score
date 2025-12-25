@@ -120,7 +120,11 @@ class BaseScanner(ABC):
         )
 
     def _find_first_match(self, repo_path: Path, patterns: list[str]) -> Path | None:
-        """Find the first file matching any of the patterns."""
+        """Find the first file matching any of the patterns.
+
+        Searches root level first, then subdirectories for polyrepo/monorepo support.
+        """
+        # First pass: check root level and explicit patterns
         for pattern in patterns:
             matches = list(repo_path.glob(pattern))
             if matches:
@@ -128,6 +132,21 @@ class BaseScanner(ABC):
                     return matches[0].relative_to(repo_path)
                 except ValueError:
                     return matches[0]
+
+        # Second pass: recursive search in subdirectories
+        # Skip patterns that already have ** or are directories
+        for pattern in patterns:
+            if "**" in pattern or pattern.endswith("/"):
+                continue
+            # Try recursive pattern
+            recursive_pattern = f"**/{pattern}"
+            matches = list(repo_path.glob(recursive_pattern))
+            if matches:
+                try:
+                    return matches[0].relative_to(repo_path)
+                except ValueError:
+                    return matches[0]
+
         return None
 
 

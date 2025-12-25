@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2024-12-25
+
+### Fixed
+
+- **Polyrepo/monorepo support**: Scanner now searches subdirectories when configs aren't at root level
+- Fixes misleading low scores for repos with nested project structures
+
 ## [0.1.0] - 2024-12-25
 
 ### Added
