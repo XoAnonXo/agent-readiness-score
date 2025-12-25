@@ -19,6 +19,15 @@ SHARED_CONFIG_WEIGHT = 2.0
 # Critical missing penalty
 CRITICAL_PENALTY = 5.0
 
+# Directories to exclude from scanning (performance optimization)
+EXCLUDED_DIRS = {
+    "node_modules", ".git", "__pycache__", ".venv", "venv", "env",
+    "dist", "build", "target", ".next", ".nuxt", "coverage",
+    ".pytest_cache", ".mypy_cache", ".ruff_cache", "vendor",
+    ".cargo", ".rustup", "Pods", ".gradle", ".idea", ".vscode",
+    ".turbo", ".vercel", ".netlify", "out", ".output",
+}
+
 
 class ScanEngine:
     """Orchestrates the scanning process across all categories."""
@@ -160,26 +169,69 @@ class ScanEngine:
     def _find_in_package(
         self, pkg_path: Path, repo_path: Path, patterns: list[str]
     ) -> Path | None:
-        """Find a file matching patterns within a package, including shared root configs."""
-        # First check in package directory
+        """Find a file matching patterns within a package, including subdirs and root."""
+        # First check in package directory (direct patterns)
         for pattern in patterns:
-            matches = list(pkg_path.glob(pattern))
-            if matches:
-                try:
-                    return matches[0].relative_to(repo_path)
-                except ValueError:
-                    return matches[0]
+            if "**" not in pattern:
+                # Direct pattern - check package root
+                for match in pkg_path.glob(pattern):
+                    if not self._is_excluded(match):
+                        try:
+                            return match.relative_to(repo_path)
+                        except ValueError:
+                            return match
+
+        # Check subdirectories within package (max 2 levels deep for performance)
+        for pattern in patterns:
+            if "**" in pattern:
+                continue  # Skip recursive patterns, handle manually
+            # Search in immediate subdirs
+            result = self._search_with_depth(pkg_path, pattern, repo_path, max_depth=2)
+            if result:
+                return result
 
         # Also check root for shared configs
         for pattern in patterns:
-            matches = list(repo_path.glob(pattern))
-            if matches:
-                try:
-                    return matches[0].relative_to(repo_path)
-                except ValueError:
-                    return matches[0]
+            if "**" not in pattern:
+                for match in repo_path.glob(pattern):
+                    if not self._is_excluded(match):
+                        try:
+                            return match.relative_to(repo_path)
+                        except ValueError:
+                            return match
 
         return None
+
+    def _search_with_depth(
+        self, base_path: Path, pattern: str, repo_path: Path, max_depth: int = 2
+    ) -> Path | None:
+        """Search for pattern in base_path and subdirs up to max_depth."""
+        # Check base first
+        for match in base_path.glob(pattern):
+            if not self._is_excluded(match):
+                try:
+                    return match.relative_to(repo_path)
+                except ValueError:
+                    return match
+
+        # Check subdirectories
+        if max_depth > 0:
+            try:
+                for subdir in base_path.iterdir():
+                    if subdir.is_dir() and subdir.name not in EXCLUDED_DIRS:
+                        result = self._search_with_depth(
+                            subdir, pattern, repo_path, max_depth - 1
+                        )
+                        if result:
+                            return result
+            except PermissionError:
+                pass
+
+        return None
+
+    def _is_excluded(self, path: Path) -> bool:
+        """Check if path is in an excluded directory."""
+        return any(excluded in path.parts for excluded in EXCLUDED_DIRS)
 
     def _check_shared_infrastructure(self, repo_path: Path) -> list[SharedInfraFinding]:
         """Check for shared infrastructure at repo root."""
@@ -296,12 +348,22 @@ class ScanEngine:
 
         return category_scores
 
-    def _find_at_root(self, path: Path, patterns: list[str]) -> Path | None:
-        """Find a file matching patterns at a specific path (no recursion)."""
+    def _find_at_root(self, path: Path, patterns: list[str], max_depth: int = 2) -> Path | None:
+        """Find a file matching patterns at a specific path with limited recursion."""
+        # Check direct patterns first
         for pattern in patterns:
-            matches = list(path.glob(pattern))
-            if matches:
-                return matches[0]
+            if "**" not in pattern:
+                for match in path.glob(pattern):
+                    if not self._is_excluded(match):
+                        return match
+
+        # Search subdirs with depth limit
+        for pattern in patterns:
+            if "**" not in pattern:
+                result = self._search_with_depth(path, pattern, path, max_depth=max_depth)
+                if result:
+                    return result
+
         return None
 
     def _calculate_multi_package_score(

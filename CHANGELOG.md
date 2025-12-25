@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2024-12-26
+
+### Fixed
+
+- **Workspace Detection**: Properly detects monorepo workspaces from `package.json`, `pnpm-workspace.yaml`, and Cargo.toml `[workspace]` configs
+- **Per-Package Configs**: Searches subdirectories within packages (up to 2 levels deep) for config files like `.golangci.yml`, `.solhint.json`
+- **Language Filtering**: Checks are now properly filtered by detected languages per-package
+- **Performance**: Uses controlled `iterdir()` with max depth instead of expensive `**` glob patterns; adds EXCLUDED_DIRS filtering throughout engine.py
+
+### Changed
+
+- Rewrote `detector.py` with fast workspace detection that parses monorepo configs directly
+- Added `_search_with_depth()` method for bounded subdirectory searches
+- Test detection now uses direct directory checks instead of recursive globs
+
 ## [0.2.1] - 2024-12-25
 
 ### Fixed
