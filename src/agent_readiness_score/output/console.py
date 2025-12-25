@@ -5,7 +5,7 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.text import Text
 
-from agent_readiness_score.core.models import ScanReport
+from agent_readiness_score.core.models import ScanReport, RepoType
 
 # Progress bar configuration
 PROGRESS_BAR_WIDTH = 10
@@ -21,6 +21,12 @@ class ConsoleFormatter:
     def format(self, report: ScanReport) -> None:
         """Print formatted report to console."""
         self._print_header(report)
+
+        # For multi-package repos, show per-package breakdown
+        if report.repo_structure and report.repo_structure.is_multi_package and report.package_scores:
+            self._print_package_table(report)
+            self._print_shared_infrastructure(report)
+
         self._print_category_table(report)
 
         if self.verbose:
@@ -32,17 +38,92 @@ class ConsoleFormatter:
         """Print report header with repo info."""
         languages = ", ".join(report.detected_languages) if report.detected_languages else "None detected"
 
+        # Add structure info for multi-package repos
+        structure_info = ""
+        if report.repo_structure and report.repo_structure.is_multi_package:
+            pkg_count = len(report.repo_structure.packages)
+            structure_type = report.repo_structure.type.value.title()
+            structure_info = f"\n[bold]Structure:[/bold] {structure_type} ({pkg_count} packages detected)"
+
         self.console.print()
         self.console.print(
             Panel(
                 f"[bold]Repository:[/bold] {report.repo_path}\n"
                 f"[bold]Languages:[/bold] {languages}\n"
                 f"[bold]Scanned:[/bold] {report.timestamp}\n"
-                f"[bold]Duration:[/bold] {report.scan_duration_ms:.1f}ms",
+                f"[bold]Duration:[/bold] {report.scan_duration_ms:.1f}ms{structure_info}",
                 title="[bold blue]Agent Readiness Scan[/bold blue]",
                 border_style="blue",
             )
         )
+
+    def _print_package_table(self, report: ScanReport) -> None:
+        """Print per-package scores table."""
+        table = Table(title="Per-Package Scores", show_header=True)
+        table.add_column("Package", style="cyan", width=24)
+        table.add_column("Languages", width=16)
+        table.add_column("Score", justify="right", width=8)
+        table.add_column("Key Findings", width=36)
+
+        for ps in sorted(report.package_scores, key=lambda x: x.score, reverse=True):
+            score_color = self._get_score_color(ps.score)
+            langs = ", ".join(sorted(l.value.upper()[:2] for l in ps.package.languages)[:3])
+            if len(ps.package.languages) > 3:
+                langs += "..."
+
+            # Build key findings summary
+            findings_parts = []
+            if ps.package.has_lockfile:
+                findings_parts.append("[green]✓[/green] lockfile")
+            else:
+                findings_parts.append("[red]✗[/red] lockfile")
+
+            if ps.package.has_tests:
+                findings_parts.append("[green]✓[/green] tests")
+            else:
+                findings_parts.append("[red]✗[/red] tests")
+
+            if ps.package.has_types:
+                findings_parts.append("[green]✓[/green] types")
+            else:
+                findings_parts.append("[red]✗[/red] types")
+
+            findings_str = " ".join(findings_parts)
+
+            table.add_row(
+                str(ps.package.path) + "/" if str(ps.package.path) != "." else "(root)",
+                langs,
+                f"[{score_color}]{ps.score:.0f}[/{score_color}]",
+                findings_str,
+            )
+
+        self.console.print()
+        self.console.print(table)
+
+    def _print_shared_infrastructure(self, report: ScanReport) -> None:
+        """Print shared infrastructure table."""
+        if not report.shared_infra:
+            return
+
+        table = Table(title="Shared Infrastructure", show_header=True)
+        table.add_column("Check", style="cyan", width=32)
+        table.add_column("Status", justify="center", width=8)
+        table.add_column("Path", width=36)
+
+        # Deduplicate by name (same config can match multiple patterns)
+        seen_names: set[str] = set()
+        for si in report.shared_infra:
+            if si.name in seen_names:
+                continue
+            seen_names.add(si.name)
+
+            status = "[green]✓[/green]" if si.found else "[red]✗[/red]"
+            path = str(si.path) if si.path else "-"
+
+            table.add_row(si.name, status, path)
+
+        self.console.print()
+        self.console.print(table)
 
     def _print_category_table(self, report: ScanReport) -> None:
         """Print category scores as a table."""
@@ -92,7 +173,7 @@ class ConsoleFormatter:
         grade_color = self._get_grade_color(report.grade)
         score_color = self._get_score_color(report.total_score)
 
-        readiness_level = self._get_readiness_level(report.total_score)
+        readiness_level = self._get_readiness_level(report.total_score, report.repo_structure)
 
         summary = Text()
         summary.append("\n")
@@ -139,15 +220,23 @@ class ConsoleFormatter:
         color = self._get_score_color(score)
         return f"[{color}]{'█' * filled}[/{color}][dim]{'░' * empty}[/dim]"
 
-    def _get_readiness_level(self, score: float) -> str:
+    def _get_readiness_level(self, score: float, repo_structure=None) -> str:
         """Get descriptive readiness level."""
+        # Add context for multi-package repos
+        suffix = ""
+        if repo_structure and repo_structure.is_multi_package:
+            if score >= 70:
+                suffix = " - good package-level setup"
+            else:
+                suffix = " - some packages need attention"
+
         if score >= 90:
-            return "Excellent agent readiness - ready for autonomous development"
+            return f"Excellent agent readiness - ready for autonomous development{suffix}"
         elif score >= 80:
-            return "Good agent readiness - minor improvements recommended"
+            return f"Good agent readiness - minor improvements recommended{suffix}"
         elif score >= 70:
-            return "Moderate agent readiness - several areas need attention"
+            return f"Moderate agent readiness - several areas need attention{suffix}"
         elif score >= 60:
-            return "Limited agent readiness - significant gaps exist"
+            return f"Limited agent readiness - significant gaps exist{suffix}"
         else:
-            return "Poor agent readiness - major infrastructure missing"
+            return f"Poor agent readiness - major infrastructure missing{suffix}"

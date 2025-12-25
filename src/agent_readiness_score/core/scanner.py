@@ -76,8 +76,13 @@ class BaseScanner(ABC):
         findings: list[Finding] = []
         checks = self.get_checks(lang_stats)
 
-        for check in checks:
-            check_name, patterns, weight, applicable_langs = check
+        for check_tuple in checks:
+            # Handle both old 4-tuple and new 6-tuple format
+            if len(check_tuple) == 4:
+                check_name, patterns, weight, applicable_langs = check_tuple
+                scope, critical = "any", False
+            else:
+                check_name, patterns, weight, applicable_langs, scope, critical = check_tuple
 
             # Skip checks that don't apply to this repo's languages
             if applicable_langs is not None and lang_stats is not None:
@@ -151,79 +156,98 @@ class BaseScanner(ABC):
 
 
 # Type alias for check tuples
-Check = tuple[str, list[str], float, set[Language] | None]
+# (name, patterns, weight, applicable_languages, scope, critical)
+Check = tuple[str, list[str], float, set[Language] | None, str, bool]
 
 
-def check(name: str, patterns: list[str], weight: float = 1.0, langs: set[Language] | None = None) -> Check:
+def check(
+    name: str,
+    patterns: list[str],
+    weight: float = 1.0,
+    langs: set[Language] | None = None,
+    scope: str = "any",
+    critical: bool = False,
+) -> Check:
     """Helper to create a check tuple with cleaner syntax."""
-    return (name, patterns, weight, langs)
+    return (name, patterns, weight, langs, scope, critical)
 
 
-def py(*patterns: str, name: str, weight: float = 1.0) -> Check:
+def py(*patterns: str, name: str, weight: float = 1.0, scope: str = "any", critical: bool = False) -> Check:
     """Python-specific check."""
-    return (name, list(patterns), weight, {Language.PYTHON})
+    return (name, list(patterns), weight, {Language.PYTHON}, scope, critical)
 
 
-def js(*patterns: str, name: str, weight: float = 1.0) -> Check:
+def js(*patterns: str, name: str, weight: float = 1.0, scope: str = "any", critical: bool = False) -> Check:
     """JavaScript-specific check."""
-    return (name, list(patterns), weight, {Language.JAVASCRIPT, Language.TYPESCRIPT})
+    return (name, list(patterns), weight, {Language.JAVASCRIPT, Language.TYPESCRIPT}, scope, critical)
 
 
-def ts(*patterns: str, name: str, weight: float = 1.0) -> Check:
+def ts(*patterns: str, name: str, weight: float = 1.0, scope: str = "any", critical: bool = False) -> Check:
     """TypeScript-specific check."""
-    return (name, list(patterns), weight, {Language.TYPESCRIPT})
+    return (name, list(patterns), weight, {Language.TYPESCRIPT}, scope, critical)
 
 
-def go(*patterns: str, name: str, weight: float = 1.0) -> Check:
+def go(*patterns: str, name: str, weight: float = 1.0, scope: str = "any", critical: bool = False) -> Check:
     """Go-specific check."""
-    return (name, list(patterns), weight, {Language.GO})
+    return (name, list(patterns), weight, {Language.GO}, scope, critical)
 
 
-def rust(*patterns: str, name: str, weight: float = 1.0) -> Check:
+def rust(*patterns: str, name: str, weight: float = 1.0, scope: str = "any", critical: bool = False) -> Check:
     """Rust-specific check."""
-    return (name, list(patterns), weight, {Language.RUST})
+    return (name, list(patterns), weight, {Language.RUST}, scope, critical)
 
 
-def ruby(*patterns: str, name: str, weight: float = 1.0) -> Check:
+def ruby(*patterns: str, name: str, weight: float = 1.0, scope: str = "any", critical: bool = False) -> Check:
     """Ruby-specific check."""
-    return (name, list(patterns), weight, {Language.RUBY})
+    return (name, list(patterns), weight, {Language.RUBY}, scope, critical)
 
 
-def java(*patterns: str, name: str, weight: float = 1.0) -> Check:
+def java(*patterns: str, name: str, weight: float = 1.0, scope: str = "any", critical: bool = False) -> Check:
     """Java-specific check."""
-    return (name, list(patterns), weight, {Language.JAVA, Language.KOTLIN})
+    return (name, list(patterns), weight, {Language.JAVA, Language.KOTLIN}, scope, critical)
 
 
-def swift(*patterns: str, name: str, weight: float = 1.0) -> Check:
+def swift(*patterns: str, name: str, weight: float = 1.0, scope: str = "any", critical: bool = False) -> Check:
     """Swift-specific check."""
-    return (name, list(patterns), weight, {Language.SWIFT})
+    return (name, list(patterns), weight, {Language.SWIFT}, scope, critical)
 
 
-def csharp(*patterns: str, name: str, weight: float = 1.0) -> Check:
+def csharp(*patterns: str, name: str, weight: float = 1.0, scope: str = "any", critical: bool = False) -> Check:
     """C#-specific check."""
-    return (name, list(patterns), weight, {Language.CSHARP})
+    return (name, list(patterns), weight, {Language.CSHARP}, scope, critical)
 
 
-def cpp(*patterns: str, name: str, weight: float = 1.0) -> Check:
+def cpp(*patterns: str, name: str, weight: float = 1.0, scope: str = "any", critical: bool = False) -> Check:
     """C/C++-specific check."""
-    return (name, list(patterns), weight, {Language.C, Language.CPP})
+    return (name, list(patterns), weight, {Language.C, Language.CPP}, scope, critical)
 
 
-def php(*patterns: str, name: str, weight: float = 1.0) -> Check:
+def php(*patterns: str, name: str, weight: float = 1.0, scope: str = "any", critical: bool = False) -> Check:
     """PHP-specific check."""
-    return (name, list(patterns), weight, {Language.PHP})
+    return (name, list(patterns), weight, {Language.PHP}, scope, critical)
 
 
-def elixir(*patterns: str, name: str, weight: float = 1.0) -> Check:
+def elixir(*patterns: str, name: str, weight: float = 1.0, scope: str = "any", critical: bool = False) -> Check:
     """Elixir-specific check."""
-    return (name, list(patterns), weight, {Language.ELIXIR})
+    return (name, list(patterns), weight, {Language.ELIXIR}, scope, critical)
 
 
-def dart(*patterns: str, name: str, weight: float = 1.0) -> Check:
+def dart(*patterns: str, name: str, weight: float = 1.0, scope: str = "any", critical: bool = False) -> Check:
     """Dart-specific check."""
-    return (name, list(patterns), weight, {Language.DART})
+    return (name, list(patterns), weight, {Language.DART}, scope, critical)
 
 
-def universal(*patterns: str, name: str, weight: float = 1.0) -> Check:
+def universal(*patterns: str, name: str, weight: float = 1.0, scope: str = "any", critical: bool = False) -> Check:
     """Language-agnostic check."""
-    return (name, list(patterns), weight, None)
+    return (name, list(patterns), weight, None, scope, critical)
+
+
+# Convenience functions for root-only checks
+def root(*patterns: str, name: str, weight: float = 1.0, critical: bool = False) -> Check:
+    """Root-level only check (applies to whole repo)."""
+    return (name, list(patterns), weight, None, "root", critical)
+
+
+def pkg(*patterns: str, name: str, weight: float = 1.0, langs: set[Language] | None = None, critical: bool = False) -> Check:
+    """Package-level only check."""
+    return (name, list(patterns), weight, langs, "package", critical)

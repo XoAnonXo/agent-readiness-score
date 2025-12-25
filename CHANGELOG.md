@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2024-12-25
+
+### Added
+
+- **Package Detection**: Automatic detection of polyrepo/monorepo structures
+- **Per-Package Scoring**: Each package scored independently based on its languages
+- **Shared Infrastructure**: Recognition of root-level configs that benefit all packages
+- **New Output Tables**: Per-package breakdown and shared infrastructure status
+- **Package Models**: `Package`, `RepoStructure`, `PackageScore`, `SharedInfraFinding`
+- **Check Scopes**: Checks can now specify `root`, `package`, or `any` scope
+- **Aggregation Formula**: Weighted average of package scores with shared config bonuses
+
+### Changed
+
+- Engine now detects repo structure before scanning
+- Console output shows package breakdown for multi-package repos
+- Scoring algorithm accounts for package-level language filtering
+
+### Fixed
+
+- Misleading low scores for polyrepo/monorepo structures
+- Python checks no longer penalize JS-only packages and vice versa
+- Configs in subdirectories now properly detected
+
 ## [0.1.1] - 2024-12-25
 
 ### Fixed
