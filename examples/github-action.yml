@@ -1,0 +1,260 @@
+# Example GitHub Action workflow for using agent-ready in CI/CD
+#
+# This workflow runs on every push and pull request to check your repository's
+# agent readiness score and ensures it meets a minimum threshold.
+#
+# Usage:
+#   1. Copy this file to .github/workflows/agent-readiness.yml in your repo
+#   2. Adjust the min-score threshold to your requirements
+#   3. Commit and push to trigger the workflow
+
+name: Agent Readiness Check
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  # Allow manual trigger
+  workflow_dispatch:
+
+# Optional: Run on a schedule (e.g., weekly)
+# schedule:
+#   - cron: '0 0 * * 0'  # Every Sunday at midnight
+
+jobs:
+  check-agent-readiness:
+    name: Check Agent Readiness Score
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install agent-ready
+        run: |
+          python -m pip install --upgrade pip
+          pip install agent-readiness-score
+
+      - name: Run agent-ready scan
+        id: scan
+        run: |
+          # Run scan and save JSON output
+          agent-ready scan . \
+            --output both \
+            --json-file agent-readiness-report.json \
+            --min-score 70 \
+            --verbose
+
+      - name: Upload scan report
+        uses: actions/upload-artifact@v4
+        if: always()  # Upload even if scan fails
+        with:
+          name: agent-readiness-report
+          path: agent-readiness-report.json
+          retention-days: 30
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('agent-readiness-report.json', 'utf8'));
+
+            const score = report.total_score.toFixed(1);
+            const grade = report.grade;
+
+            // Build category table
+            let categoryTable = '| Category | Score | Weight | Found |\n';
+            categoryTable += '|----------|-------|--------|-------|\n';
+
+            for (const cat of report.categories) {
+              const catScore = cat.score.toFixed(1);
+              const weight = (cat.weight * 100).toFixed(0) + '%';
+              const found = `${cat.found}/${cat.total}`;
+              categoryTable += `| ${cat.name} | ${catScore} | ${weight} | ${found} |\n`;
+            }
+
+            const comment = `## 🤖 Agent Readiness Score: ${score}/100 (Grade: ${grade})
+
+            ${categoryTable}
+
+            <details>
+            <summary>📊 What does this mean?</summary>
+
+            The Agent Readiness Score measures how well your repository is prepared for AI agent-assisted development:
+
+            - **A (90-100)**: Excellent - Ready for autonomous development
+            - **B (80-89)**: Good - Minor improvements recommended
+            - **C (70-79)**: Moderate - Several areas need attention
+            - **D (60-69)**: Limited - Significant gaps exist
+            - **F (0-59)**: Poor - Major infrastructure missing
+
+            Each category is weighted based on its importance for AI agents:
+            - Testing (20%): Test frameworks and coverage
+            - Style & Validation (15%): Linters and formatters
+            - Dev Environments (15%): Containers and reproducibility
+            - Build Systems (10%): CI/CD and automation
+            - Observability (10%): Logging and monitoring
+            - Dependencies (10%): Lockfiles and security
+            - Documentation (10%): README and docs
+            - Static Typing (10%): Type annotations
+
+            </details>`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # Optional: Fail if score drops below previous run
+  check-score-regression:
+    name: Check for Score Regression
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install agent-ready
+        run: pip install agent-readiness-score
+
+      - name: Scan PR branch
+        run: |
+          agent-ready scan . --json-file pr-report.json --output json
+
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+
+      - name: Scan base branch
+        run: |
+          agent-ready scan . --json-file base-report.json --output json
+
+      - name: Compare scores
+        run: |
+          PR_SCORE=$(jq -r '.total_score' pr-report.json)
+          BASE_SCORE=$(jq -r '.total_score' base-report.json)
+
+          echo "PR Score: $PR_SCORE"
+          echo "Base Score: $BASE_SCORE"
+
+          # Allow a 5-point regression
+          THRESHOLD=5
+
+          if (( $(echo "$BASE_SCORE - $PR_SCORE > $THRESHOLD" | bc -l) )); then
+            echo "❌ Score regression detected!"
+            echo "Score dropped by $(echo "$BASE_SCORE - $PR_SCORE" | bc -l) points"
+            exit 1
+          else
+            echo "✅ No significant score regression"
+          fi
+
+  # Optional: Advanced usage with custom configuration
+  advanced-scan:
+    name: Advanced Scan with Custom Settings
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install agent-ready
+        run: pip install agent-readiness-score
+
+      - name: Run comprehensive scan
+        run: |
+          # Scan with verbose output for detailed analysis
+          agent-ready scan . \
+            --verbose \
+            --output both \
+            --json-file detailed-report.json
+
+      - name: Check specific category thresholds
+        run: |
+          # Extract individual category scores and check thresholds
+          TESTING_SCORE=$(jq -r '.categories[] | select(.name=="testing") | .score' detailed-report.json)
+          DOCS_SCORE=$(jq -r '.categories[] | select(.name=="documentation") | .score' detailed-report.json)
+
+          echo "Testing Score: $TESTING_SCORE"
+          echo "Documentation Score: $DOCS_SCORE"
+
+          # Require high testing score
+          if (( $(echo "$TESTING_SCORE < 80" | bc -l) )); then
+            echo "❌ Testing score too low (must be >= 80)"
+            exit 1
+          fi
+
+          # Require decent documentation
+          if (( $(echo "$DOCS_SCORE < 60" | bc -l) )); then
+            echo "❌ Documentation score too low (must be >= 60)"
+            exit 1
+          fi
+
+          echo "✅ All category thresholds met"
+
+      - name: Generate badge
+        run: |
+          SCORE=$(jq -r '.total_score' detailed-report.json)
+          GRADE=$(jq -r '.grade' detailed-report.json)
+
+          # Determine badge color
+          if (( $(echo "$SCORE >= 90" | bc -l) )); then
+            COLOR="brightgreen"
+          elif (( $(echo "$SCORE >= 80" | bc -l) )); then
+            COLOR="green"
+          elif (( $(echo "$SCORE >= 70" | bc -l) )); then
+            COLOR="yellow"
+          elif (( $(echo "$SCORE >= 60" | bc -l) )); then
+            COLOR="orange"
+          else
+            COLOR="red"
+          fi
+
+          # Create badge URL
+          BADGE_URL="https://img.shields.io/badge/Agent%20Ready-${SCORE}%20(${GRADE})-${COLOR}"
+          echo "Badge URL: $BADGE_URL"
+
+          # You can use this to update your README automatically
+
+      - name: Upload detailed report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: detailed-agent-readiness-report
+          path: detailed-report.json
+          retention-days: 90
+
+# Example configuration for different thresholds by branch
+# Adjust based on your development workflow:
+#
+# - main branch: Require score >= 80 (production-ready)
+# - develop branch: Require score >= 70 (development standard)
+# - feature branches: Require score >= 60 (minimum viable)
+#
+# You can implement this using conditional steps based on github.ref

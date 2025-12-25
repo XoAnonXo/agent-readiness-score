@@ -1,0 +1,621 @@
+{
+  "repo_path": "/Users/developer/projects/example-python-api",
+  "total_score": 84.3,
+  "grade": "B",
+  "detected_languages": [
+    "python",
+    "typescript"
+  ],
+  "scan_duration_ms": 127.45,
+  "timestamp": "2024-12-25T15:30:45.123456+00:00",
+  "categories": [
+    {
+      "name": "testing",
+      "score": 87.5,
+      "weight": 0.2,
+      "weighted_score": 17.5,
+      "found": 14,
+      "total": 16,
+      "findings": [
+        {
+          "name": "pytest",
+          "found": true,
+          "path": "pytest.ini",
+          "details": null
+        },
+        {
+          "name": "pytest fixtures",
+          "found": true,
+          "path": "tests/conftest.py",
+          "details": null
+        },
+        {
+          "name": "Coverage.py",
+          "found": true,
+          "path": "pyproject.toml",
+          "details": null
+        },
+        {
+          "name": "Test directory",
+          "found": true,
+          "path": "tests",
+          "details": null
+        },
+        {
+          "name": "Tox",
+          "found": true,
+          "path": "tox.ini",
+          "details": null
+        },
+        {
+          "name": "E2E/Integration tests",
+          "found": true,
+          "path": "tests/e2e",
+          "details": null
+        },
+        {
+          "name": "Codecov config",
+          "found": true,
+          "path": ".codecov.yml",
+          "details": null
+        },
+        {
+          "name": "Jest",
+          "found": true,
+          "path": "jest.config.js",
+          "details": null
+        },
+        {
+          "name": "Cypress",
+          "found": true,
+          "path": "cypress.config.ts",
+          "details": null
+        },
+        {
+          "name": "Playwright",
+          "found": true,
+          "path": "playwright.config.ts",
+          "details": null
+        },
+        {
+          "name": "Hypothesis",
+          "found": false,
+          "path": null,
+          "details": null
+        },
+        {
+          "name": "Nox",
+          "found": false,
+          "path": null,
+          "details": null
+        },
+        {
+          "name": "Vitest",
+          "found": false,
+          "path": null,
+          "details": null
+        },
+        {
+          "name": "NYC coverage",
+          "found": true,
+          "path": ".nycrc",
+          "details": null
+        },
+        {
+          "name": "Storybook",
+          "found": true,
+          "path": ".storybook",
+          "details": null
+        },
+        {
+          "name": "k6 load testing",
+          "found": true,
+          "path": "k6.js",
+          "details": null
+        }
+      ]
+    },
+    {
+      "name": "style",
+      "score": 92.3,
+      "weight": 0.15,
+      "weighted_score": 13.85,
+      "found": 12,
+      "total": 13,
+      "findings": [
+        {
+          "name": "Ruff (Python)",
+          "found": true,
+          "path": "pyproject.toml",
+          "details": null
+        },
+        {
+          "name": "Black (Python)",
+          "found": true,
+          "path": "pyproject.toml",
+          "details": null
+        },
+        {
+          "name": "mypy (Python)",
+          "found": true,
+          "path": "pyproject.toml",
+          "details": null
+        },
+        {
+          "name": "isort (Python)",
+          "found": true,
+          "path": "pyproject.toml",
+          "details": null
+        },
+        {
+          "name": "ESLint",
+          "found": true,
+          "path": ".eslintrc.json",
+          "details": null
+        },
+        {
+          "name": "Prettier",
+          "found": true,
+          "path": ".prettierrc",
+          "details": null
+        },
+        {
+          "name": "Pre-commit hooks",
+          "found": true,
+          "path": ".pre-commit-config.yaml",
+          "details": null
+        },
+        {
+          "name": "EditorConfig",
+          "found": true,
+          "path": ".editorconfig",
+          "details": null
+        },
+        {
+          "name": "Stylelint (CSS)",
+          "found": true,
+          "path": ".stylelintrc",
+          "details": null
+        },
+        {
+          "name": "Husky git hooks",
+          "found": true,
+          "path": ".husky",
+          "details": null
+        },
+        {
+          "name": "lint-staged",
+          "found": true,
+          "path": ".lintstagedrc.json",
+          "details": null
+        },
+        {
+          "name": "CI linting workflow",
+          "found": true,
+          "path": ".github/workflows/lint.yml",
+          "details": null
+        },
+        {
+          "name": "Bandit security (Python)",
+          "found": false,
+          "path": null,
+          "details": null
+        }
+      ]
+    },
+    {
+      "name": "build",
+      "score": 88.9,
+      "weight": 0.1,
+      "weighted_score": 8.89,
+      "found": 8,
+      "total": 9,
+      "findings": [
+        {
+          "name": "GitHub Actions",
+          "found": true,
+          "path": ".github/workflows/ci.yml",
+          "details": null
+        },
+        {
+          "name": "Makefile",
+          "found": true,
+          "path": "Makefile",
+          "details": null
+        },
+        {
+          "name": "pyproject.toml",
+          "found": true,
+          "path": "pyproject.toml",
+          "details": null
+        },
+        {
+          "name": "package.json",
+          "found": true,
+          "path": "package.json",
+          "details": null
+        },
+        {
+          "name": "Dockerfile",
+          "found": true,
+          "path": "Dockerfile",
+          "details": null
+        },
+        {
+          "name": "Docker Compose",
+          "found": true,
+          "path": "docker-compose.yml",
+          "details": null
+        },
+        {
+          "name": "Webpack",
+          "found": true,
+          "path": "webpack.config.js",
+          "details": null
+        },
+        {
+          "name": "Turborepo",
+          "found": true,
+          "path": "turbo.json",
+          "details": null
+        },
+        {
+          "name": "Just",
+          "found": false,
+          "path": null,
+          "details": null
+        }
+      ]
+    },
+    {
+      "name": "devenv",
+      "score": 75.0,
+      "weight": 0.15,
+      "weighted_score": 11.25,
+      "found": 9,
+      "total": 12,
+      "findings": [
+        {
+          "name": "DevContainer config",
+          "found": true,
+          "path": ".devcontainer/devcontainer.json",
+          "details": null
+        },
+        {
+          "name": "DevContainer Dockerfile",
+          "found": true,
+          "path": ".devcontainer/Dockerfile",
+          "details": null
+        },
+        {
+          "name": "Dockerfile",
+          "found": true,
+          "path": "Dockerfile",
+          "details": null
+        },
+        {
+          "name": "Docker Compose",
+          "found": true,
+          "path": "docker-compose.yml",
+          "details": null
+        },
+        {
+          "name": "Docker Compose dev",
+          "found": true,
+          "path": "docker-compose.dev.yml",
+          "details": null
+        },
+        {
+          "name": ".envrc (direnv)",
+          "found": true,
+          "path": ".envrc",
+          "details": null
+        },
+        {
+          "name": "VS Code settings",
+          "found": true,
+          "path": ".vscode/settings.json",
+          "details": null
+        },
+        {
+          "name": "VS Code extensions",
+          "found": true,
+          "path": ".vscode/extensions.json",
+          "details": null
+        },
+        {
+          "name": ".env.example",
+          "found": true,
+          "path": ".env.example",
+          "details": null
+        },
+        {
+          "name": "Nix flake",
+          "found": false,
+          "path": null,
+          "details": null
+        },
+        {
+          "name": "Nix shell",
+          "found": false,
+          "path": null,
+          "details": null
+        },
+        {
+          "name": "Vagrantfile",
+          "found": false,
+          "path": null,
+          "details": null
+        }
+      ]
+    },
+    {
+      "name": "observability",
+      "score": 66.7,
+      "weight": 0.1,
+      "weighted_score": 6.67,
+      "found": 6,
+      "total": 9,
+      "findings": [
+        {
+          "name": "Python logging config",
+          "found": true,
+          "path": "logging.yaml",
+          "details": null
+        },
+        {
+          "name": "Sentry config",
+          "found": true,
+          "path": ".sentryclirc",
+          "details": null
+        },
+        {
+          "name": "DataDog config",
+          "found": true,
+          "path": "datadog.yaml",
+          "details": null
+        },
+        {
+          "name": "Prometheus config",
+          "found": true,
+          "path": "prometheus.yml",
+          "details": null
+        },
+        {
+          "name": "Grafana dashboards",
+          "found": true,
+          "path": "grafana/dashboards",
+          "details": null
+        },
+        {
+          "name": "Health check endpoint",
+          "found": true,
+          "path": "healthcheck.py",
+          "details": null
+        },
+        {
+          "name": "New Relic",
+          "found": false,
+          "path": null,
+          "details": null
+        },
+        {
+          "name": "OTEL config",
+          "found": false,
+          "path": null,
+          "details": null
+        },
+        {
+          "name": "Log4j config",
+          "found": false,
+          "path": null,
+          "details": null
+        }
+      ]
+    },
+    {
+      "name": "dependencies",
+      "score": 90.9,
+      "weight": 0.1,
+      "weighted_score": 9.09,
+      "found": 10,
+      "total": 11,
+      "findings": [
+        {
+          "name": "Poetry lock",
+          "found": true,
+          "path": "poetry.lock",
+          "details": null
+        },
+        {
+          "name": "package-lock.json",
+          "found": true,
+          "path": "package-lock.json",
+          "details": null
+        },
+        {
+          "name": "Dependabot",
+          "found": true,
+          "path": ".github/dependabot.yml",
+          "details": null
+        },
+        {
+          "name": "Renovate",
+          "found": true,
+          "path": "renovate.json",
+          "details": null
+        },
+        {
+          "name": "requirements.txt",
+          "found": true,
+          "path": "requirements.txt",
+          "details": null
+        },
+        {
+          "name": "pip-compile",
+          "found": true,
+          "path": "requirements.in",
+          "details": null
+        },
+        {
+          "name": "Safety check",
+          "found": true,
+          "path": ".safety-policy.yml",
+          "details": null
+        },
+        {
+          "name": "npm audit",
+          "found": true,
+          "path": ".npmrc",
+          "details": null
+        },
+        {
+          "name": "yarn.lock",
+          "found": true,
+          "path": "yarn.lock",
+          "details": null
+        },
+        {
+          "name": "pnpm-lock.yaml",
+          "found": true,
+          "path": "pnpm-lock.yaml",
+          "details": null
+        },
+        {
+          "name": "Pipfile lock",
+          "found": false,
+          "path": null,
+          "details": null
+        }
+      ]
+    },
+    {
+      "name": "documentation",
+      "score": 81.8,
+      "weight": 0.1,
+      "weighted_score": 8.18,
+      "found": 9,
+      "total": 11,
+      "findings": [
+        {
+          "name": "README.md",
+          "found": true,
+          "path": "README.md",
+          "details": null
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "found": true,
+          "path": "CONTRIBUTING.md",
+          "details": null
+        },
+        {
+          "name": "LICENSE",
+          "found": true,
+          "path": "LICENSE",
+          "details": null
+        },
+        {
+          "name": "CHANGELOG",
+          "found": true,
+          "path": "CHANGELOG.md",
+          "details": null
+        },
+        {
+          "name": "docs directory",
+          "found": true,
+          "path": "docs",
+          "details": null
+        },
+        {
+          "name": "API docs",
+          "found": true,
+          "path": "docs/api",
+          "details": null
+        },
+        {
+          "name": "OpenAPI spec",
+          "found": true,
+          "path": "openapi.yaml",
+          "details": null
+        },
+        {
+          "name": "MkDocs config",
+          "found": true,
+          "path": "mkdocs.yml",
+          "details": null
+        },
+        {
+          "name": "CODE_OF_CONDUCT",
+          "found": true,
+          "path": "CODE_OF_CONDUCT.md",
+          "details": null
+        },
+        {
+          "name": "GraphQL schema",
+          "found": false,
+          "path": null,
+          "details": null
+        },
+        {
+          "name": "Sphinx config",
+          "found": false,
+          "path": null,
+          "details": null
+        }
+      ]
+    },
+    {
+      "name": "typing",
+      "score": 85.7,
+      "weight": 0.1,
+      "weighted_score": 8.57,
+      "found": 6,
+      "total": 7,
+      "findings": [
+        {
+          "name": "mypy config",
+          "found": true,
+          "path": "pyproject.toml",
+          "details": null
+        },
+        {
+          "name": "py.typed marker",
+          "found": true,
+          "path": "src/example_api/py.typed",
+          "details": null
+        },
+        {
+          "name": "tsconfig.json",
+          "found": true,
+          "path": "tsconfig.json",
+          "details": null
+        },
+        {
+          "name": "TypeScript strict mode",
+          "found": true,
+          "path": "tsconfig.json",
+          "details": null
+        },
+        {
+          "name": ".d.ts declaration files",
+          "found": true,
+          "path": "types/index.d.ts",
+          "details": null
+        },
+        {
+          "name": "Type check in CI",
+          "found": true,
+          "path": ".github/workflows/typecheck.yml",
+          "details": null
+        },
+        {
+          "name": "pyright config",
+          "found": false,
+          "path": null,
+          "details": null
+        }
+      ]
+    }
+  ]
+}
